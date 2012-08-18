@@ -14,9 +14,9 @@ var _nekoList;
 // 次に渡すネコ情報のインデックス
 var _nextIndex = 0;
 
-// Flickrサーバーに問い合わせ「ALL CATS」グループに投稿された写真情報を取得する
+// Flickrサーバーに問い合わせグループに投稿された写真情報を取得する
 function collect(callback) {
-	// FlickrへのHTTP通信オブジェクトを作成
+	// Flickr APIへのHTTP通信オブジェクトを作成
 	var http = Titanium.Network.createHTTPClient({
 		onload: function(e) {
 			var json;
