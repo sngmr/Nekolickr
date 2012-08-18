@@ -10,9 +10,13 @@ var COLLECT_API_URL_BASE =
 var PHOTO_URL_BASE = 'http://farm%s.staticflickr.com/%s/%s_%s.jpg';
 
 // Flickrから取得した写真情報一覧を保存
-var _photoList;
+var _photoList = [];
 // 次に取得する写真情報のインデックス
 var _nextIndex = 0;
+// 次に取得するページ番号
+var _nextPageNumber = 1;
+// 取得可能な最大ページ番号
+var _maxPageNumber = 0;
 
 // Flickrサーバーに問い合わせグループに投稿された写真情報を取得する
 //   callbackの引数：callback(正常異常のBoolean値, データ)
@@ -24,8 +28,11 @@ function collect(callback) {
 				// JSONデータをオブジェクトへ変換
 				var json = JSON.parse(this.responseText);
 				if (json.stat === 'ok') {
-					// 写真情報一覧に変換して保存
-					_photoList = parseFlickrPhotoList(json);
+					// 写真情報一覧に変換して保存している写真情報一覧へ追加
+					_photoList = _photoList.concat(parseFlickrPhotoList(json));
+					
+					// 取得可能な最大ページ番号を保存
+					_maxPageNumber = parseInt(json.photos.pages, 10);
 					
 					// APIアクセス処理終わったらコールバック起動
 					callback(true);
@@ -55,9 +62,15 @@ function getPhotoInfo() {
 	var photoInfo =  _photoList[_nextIndex];
 	
 	// 次に取得するインデックスを増加させる
-	// 取得した写真情報一覧の最後までいってたら最初に戻る
+	// 残り3件になったら写真情報一覧を追加取得する
+	// ただし最大件数まで取得していれば写真情報一覧の最初に戻る
 	_nextIndex += 1;
-	if (_nextIndex >= _photoList.length) {
+	if ((_nextIndex + 3) >= _photoList.length && _nextPageNumber <= _maxPageNumber) {
+		_maxPageNumber = 0;				// 重複起動防止に0を入れておく
+		collect(function(isSuccess) {
+			_nextPageNumber += 1;
+		});
+	} else if (_nextIndex >= _photoList.length) {
 		_nextIndex = 0;
 	}
 	
@@ -87,8 +100,8 @@ function generateApiUrl() {
 	return String.format(COLLECT_API_URL_BASE,
 		API_KEY,
 		GROUP_ID,
-		1,			// 取得するページ数
-		100			// 一度に取得する件数
+		_nextPageNumber,			// 取得するページ数
+		100							// 一度に取得する件数
 	);
 }
 
