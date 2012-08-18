@@ -51,15 +51,15 @@ function collect(callback) {
 
 // 次に表示する写真情報を返却する
 function getPhotoInfo() {
+	// 次に表示するべき写真情報を取得
+	var photoInfo =  _photoList[_nextIndex];
+	
+	// 次に取得するインデックスを増加させる
 	// 取得した写真情報一覧の最後までいってたら最初に戻る
+	_nextIndex += 1;
 	if (_nextIndex >= _photoList.length) {
 		_nextIndex = 0;
 	}
-	
-	// 次に表示するべき写真情報を取得
-	var photoInfo =  _photoList[_nextIndex];
-	// 次に取得するインデックスを増加
-	_nextIndex += 1;
 	
 	return photoInfo;
 }
