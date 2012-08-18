@@ -9,34 +9,37 @@ var COLLECT_API_URL_BASE =
 // Flickrの写真URLベース
 var PHOTO_URL_BASE = 'http://farm%s.staticflickr.com/%s/%s_%s.jpg';
 
-// Flickrから取得したネコ情報を保存
-var _nekoList;
-// 次に渡すネコ情報のインデックス
+// Flickrから取得した写真情報一覧を保存
+var _photoList;
+// 次に取得する写真情報のインデックス
 var _nextIndex = 0;
 
 // Flickrサーバーに問い合わせグループに投稿された写真情報を取得する
+//   callbackの引数：callback(正常異常のBoolean値, データ)
 function collect(callback) {
 	// Flickr APIへのHTTP通信オブジェクトを作成
 	var http = Titanium.Network.createHTTPClient({
 		onload: function(e) {
-			var json;
 			try {
 				// JSONデータをオブジェクトへ変換
-				json = JSON.parse(this.responseText);
-				
-				// ネコ写真リストに変換
-				_nekoList = parseFlickrPhotoList(json);
-
-				// Flickrからのデータ取得処理が終わったらコールバックメソッド起動
-				callback();
+				var json = JSON.parse(this.responseText);
+				if (json.stat === 'ok') {
+					// 写真情報一覧に変換して保存
+					_photoList = parseFlickrPhotoList(json);
+					
+					// APIアクセス処理終わったらコールバック起動
+					callback(true);
+				} else {
+					callback(false, 'E1:' + json.message);
+				}
 			} catch (error) {
 				Titanium.API.error(error);
-				alert('Flickrから受け取ったデータの異常');
+				callback(false, 'E2:' + error.message);
 			}
 		},
 		onerror: function(error) {
 			Titanium.API.error(error);
-			alert('ネットワークエラーが発生しました');
+			callback(false, 'E3:' + error.error);
 		},
 		timeout: 5000
 	});
@@ -46,30 +49,31 @@ function collect(callback) {
 	http.send();
 }
 
-// ネコ情報を取得する
-function getNeko() {
-	// ネコ情報が存在しなかったら最初に戻る
-	if (_nextIndex >= _nekoList.length) {
+// 次に表示する写真情報を返却する
+function getPhotoInfo() {
+	// 取得した写真情報一覧の最後までいってたら最初に戻る
+	if (_nextIndex >= _photoList.length) {
 		_nextIndex = 0;
 	}
 	
-	// ネコ情報を取得
-	var neko =  _nekoList[_nextIndex];
-	
-	// ネコインデックスを増加
+	// 次に表示するべき写真情報を取得
+	var photoInfo =  _photoList[_nextIndex];
+	// 次に取得するインデックスを増加
 	_nextIndex += 1;
 	
-	return neko;
+	return photoInfo;
 }
 
-// Flickrサーバーからの応答を解析して保存する
+// Flickrサーバーからの応答を解析して返却する
 function parseFlickrPhotoList(json) {
 	// Flickr応答の json.photos.photoに配列でFlickr写真情報が入っている
 	var photoInfoList = json.photos.photo;
 	
+	// 写真の件数分ループする
 	var nekoList = [];
 	for (var i = 0; i < photoInfoList.length; i++) {
 		var photoUrl = generatePhotoUrl(photoInfoList[i]);
+		// 写真データを作成
 		nekoList.push({
 			imageurl: photoUrl
 		});
@@ -91,13 +95,13 @@ function generateApiUrl() {
 // Flickrサーバーから取得した写真情報から写真URLを生成する
 function generatePhotoUrl(photoInfo) {
 	return String.format(PHOTO_URL_BASE,
-		photoInfo.farm.toString(),
-		photoInfo.server.toString(),
-		photoInfo.id.toString(),
-		photoInfo.secret.toString()
+		photoInfo.farm.toString(),		// ファームID
+		photoInfo.server.toString(),	// サーバーID
+		photoInfo.id.toString(),		// 写真ID
+		photoInfo.secret.toString()		// 写真アクセス用秘密鍵
 	);
 }
 
 // 外部公開メソッド
 exports.collect = collect;
-exports.getNeko = getNeko;
+exports.getPhotoInfo = getPhotoInfo;

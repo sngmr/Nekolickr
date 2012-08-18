@@ -1,9 +1,9 @@
 (function() {
-// ネコ写真を切り替えるタイミング（ミリ秒）
+// 写真を切り替えるタイミング（ミリ秒）
 var CHANGE_INTERVAL = 5000;
 
-// ネコ情報が詰まってるネコハウスモジュール
-var nekoHouse = require('neko_house');
+// Flickrからデータを取得するモジュール
+var flickrServer = require('flickr_server');
 
 // Windowを生成
 var win = Titanium.UI.createWindow({
@@ -12,30 +12,37 @@ var win = Titanium.UI.createWindow({
 	exitOnClose: true
 });
 
-// ネコ写真を表示するImageView
+// 写真を表示するImageView
 var imageView = Titanium.UI.createImageView({
 	preventDefaultImage: true
 });
 win.add(imageView);
 
-// ネコハウスにデータ取得を依頼する
-nekoHouse.collect(function() {
-	// ImageViewへネコ写真設定
-	setNekoImage();
+// Flickrモジュールにデータ取得を依頼する
+flickrServer.collect(function(isSuccess, errorMessage) {
+	if (isSuccess) {
+		// ImageViewへ最初の写真を設定
+		setNekoImage();
+	}
 	
-	// Windowを開く
+	// Flickrモジュールの処理が終わったらWindowを開く
 	win.open();
 	
-	// 今後一定間隔でネコ写真を切り替え
-	setInterval(setNekoImage, CHANGE_INTERVAL);
+	// エラーメッセージはWindowを開いた後に表示する
+	if (!isSuccess) {
+		alert('エラー!!!\n' + errorMessage);
+	}
 });
 
-// ネコハウスからネコ情報を取得してImageViewへ設定
+// Flickrモジュール写真情報を取得してImageViewへ設定
 function setNekoImage() {
-	// ネコハウスからネコ情報を取得
-	var neko = nekoHouse.getNeko();
+	// Flickrモジュールから写真情報を取得
+	var photoInfo = flickrServer.getPhotoInfo();
 	
-	// ネコ写真をImageViewへ設定
-	imageView.image = neko.imageurl;
+	// 写真情報に設定された画像URLをImageViewへ設定
+	imageView.image = photoInfo.imageurl;
+	
+	// 一定間隔後に写真を変更する
+	setTimeout(setNekoImage, CHANGE_INTERVAL);
 }
 })();
