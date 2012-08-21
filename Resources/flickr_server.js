@@ -9,14 +9,22 @@ var COLLECT_API_URL_BASE =
 // Flickrの写真URLベース
 var PHOTO_URL_BASE = 'http://farm%s.staticflickr.com/%s/%s_%s.jpg';
 
-// Flickrから取得した写真情報一覧を保存
-var _photoList = [];
+// データベースモジュール
+var db = require('db');
+
+// 現在データベースにある写真情報一覧件数
+var _photoCount = 0;
 // 次に取得する写真情報のインデックス
 var _nextIndex = 0;
 // 次に取得するページ番号
 var _nextPageNumber = 1;
 // 取得可能な最大ページ番号
 var _maxPageNumber = 0;
+
+// モジュールを初期化する
+function init() {
+	db.init();
+}
 
 // Flickrサーバーに問い合わせグループに投稿された写真情報を取得する
 //   callbackの引数：callback(正常異常のBoolean値, データ)
@@ -28,8 +36,11 @@ function collect(callback) {
 				// JSONデータをオブジェクトへ変換
 				var json = JSON.parse(this.responseText);
 				if (json.stat === 'ok') {
-					// 写真情報一覧に変換して保存している写真情報一覧へ追加
-					_photoList = _photoList.concat(parseFlickrPhotoList(json));
+					// 写真情報一覧に変換
+					var photoList = parseFlickrPhotoList(json);
+					
+					// 写真情報一覧をデータベースに保存し保持件数を取得
+					_photoCount = db.appendPhotos(photoList);
 					
 					// 取得可能な最大ページ番号を保存
 					_maxPageNumber = parseInt(json.photos.pages, 10);
@@ -59,18 +70,21 @@ function collect(callback) {
 // 次に表示する写真情報を返却する
 function getPhotoInfo() {
 	// 次に表示するべき写真情報を取得
-	var photoInfo =  _photoList[_nextIndex];
+	var photoInfo = db.selectPhoto(_nextIndex);
+	if (!photoInfo) {
+		return null;
+	}
 	
 	// 次に取得するインデックスを増加させる
-	// 残り5件になったら写真情報一覧を追加取得する
+	// 残り2件になったら写真情報一覧を追加取得する
 	// ただし最大件数まで取得していれば写真情報一覧の最初に戻る
-	_nextIndex += 1;
-	if ((_nextIndex + 5) >= _photoList.length && _nextPageNumber <= _maxPageNumber) {
+	_nextIndex = photoInfo.idx + 1;
+	if ((_nextIndex + 2) >= _photoCount && _nextPageNumber <= _maxPageNumber) {
 		// Flickr APIへアクセスして写真一覧を取得
 		collect(function(isSuccess) {
 			_nextPageNumber += 1;
 		});
-	} else if (_nextIndex >= _photoList.length) {
+	} else if (_nextIndex >= _photoCount) {
 		_nextIndex = 0;
 	}
 	
@@ -101,7 +115,7 @@ function generateApiUrl() {
 		API_KEY,
 		GROUP_ID,
 		_nextPageNumber,			// 取得するページ数
-		25							// 一度に取得する件数
+		10							// 一度に取得する件数
 	);
 }
 
@@ -116,5 +130,6 @@ function generatePhotoUrl(photoInfo) {
 }
 
 // 外部公開メソッド
+exports.init = init;
 exports.collect = collect;
 exports.getPhotoInfo = getPhotoInfo;
