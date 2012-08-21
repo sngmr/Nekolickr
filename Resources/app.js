@@ -62,8 +62,7 @@ function setNextPhoto() {
 
 // 画像読み込み完了時イベントハンドラ
 function imageViewLoadHandler(e) {
-	// 非表示/表示ImageViewへのインデックスを保存しておく
-	//   アニメーション完了時には元の値が変更されているため
+	// 表示非表示ImageViewのインデックス
 	var hidingIndex = hidingImageIndex;
 	var showingIndex = 1 - hidingImageIndex;	// 0と1を反転させる
 
@@ -76,13 +75,15 @@ function imageViewLoadHandler(e) {
 			duration: CHANGE_DURATION
 		});
 		fadeOut.addEventListener('complete', function() {
-			// 重要：アニメーション完了後に変更した値を本体へ設定しておかないと
-			// 　　　Androidで不具合が発生する
+			// アニメーション完了後に、アニメーションにより変更した値を
+			// 本体へ設定する（やらないとAndroidで不具合発生）
 			imageViewList[showingIndex].opacity = 0;
 		});
 		
 		// 現在表示されている画像のフェードアウト
 		imageViewList[showingIndex].animate(fadeOut);
+	} else {
+		isFirst = false;
 	}
 	
 	// フェードインアニメーション作成
@@ -91,20 +92,19 @@ function imageViewLoadHandler(e) {
 		duration: CHANGE_DURATION
 	});
 	fadeIn.addEventListener('complete', function() {
-		// 重要：アニメーション完了後に変更した値を本体へ設定しておかないと
-		// 　　　Androidで不具合が発生する
+		// アニメーション完了後に、アニメーションにより変更した値を
+		// 本体へ設定する（やらないとAndroidで不具合発生）
 		imageViewList[hidingIndex].opacity = 1;
+		
+		// 表示/非表示ImageViewのインデックスを入れ替え
+		hidingImageIndex = showingIndex;
+		
+		// また一定間隔後に写真を変更する
+		setTimeout(setNextPhoto, CHANGE_INTERVAL);
 	});
 	
-	// 非表示画像には画像が設定されており読み込みも完了しているのでのフェードイン
+	// 非表示画像の読み込みは完了しているのでのフェードイン
 	imageViewList[hidingIndex].animate(fadeIn);
-
-	// 表示/非表示ImageViewのインデックスを入れ替え
-	hidingImageIndex = showingIndex;
-	isFirst = false;
-	
-	// また一定間隔後に写真を変更する
-	setTimeout(setNextPhoto, CHANGE_INTERVAL);
 }
 
 // 画像読み込み完了時イベントハンドラ

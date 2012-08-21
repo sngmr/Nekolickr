@@ -62,11 +62,11 @@ function getPhotoInfo() {
 	var photoInfo =  _photoList[_nextIndex];
 	
 	// 次に取得するインデックスを増加させる
-	// 残り3件になったら写真情報一覧を追加取得する
+	// 残り5件になったら写真情報一覧を追加取得する
 	// ただし最大件数まで取得していれば写真情報一覧の最初に戻る
 	_nextIndex += 1;
-	if ((_nextIndex + 3) >= _photoList.length && _nextPageNumber <= _maxPageNumber) {
-		_maxPageNumber = 0;				// 重複起動防止に0を入れておく
+	if ((_nextIndex + 5) >= _photoList.length && _nextPageNumber <= _maxPageNumber) {
+		// Flickr APIへアクセスして写真一覧を取得
 		collect(function(isSuccess) {
 			_nextPageNumber += 1;
 		});
@@ -101,7 +101,7 @@ function generateApiUrl() {
 		API_KEY,
 		GROUP_ID,
 		_nextPageNumber,			// 取得するページ数
-		100							// 一度に取得する件数
+		25							// 一度に取得する件数
 	);
 }
 
