@@ -1,4 +1,7 @@
 (function() {
+// アプリのSleepを抑止
+Titanium.App.idleTimerDisabled = true;	
+
 // 写真を切り替えるタイミング（ミリ秒）
 var CHANGE_INTERVAL = 30000;
 // 写真切り替えのフェードイン・アウト時間（ミリ秒）
