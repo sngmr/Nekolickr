@@ -84,16 +84,16 @@ function parseFlickrPhotoList(json) {
 	var photoInfoList = json.photos.photo;
 	
 	// 写真の件数分ループする
-	var nekoList = [];
+	var photoList = [];
 	for (var i = 0; i < photoInfoList.length; i++) {
 		var photoUrl = generatePhotoUrl(photoInfoList[i]);
 		// 写真データを作成
-		nekoList.push({
+		photoList.push({
 			imageurl: photoUrl
 		});
 	}
 	
-	return nekoList;
+	return photoList;
 }
 
 // Flickr APIへのアクセスURLを取得する
