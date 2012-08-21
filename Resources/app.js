@@ -8,9 +8,9 @@ var CHANGE_DURATION = 5000;
 var flickrServer = require('flickr_server');
 
 // 初回起動時フラグ
-var isFirst = true;
+var _isFirst = true;
 // 表示されていないImageViewのインデックス
-var hidingImageIndex = 0;
+var _hidingImageIndex = 0;
 
 // Windowを生成
 var win = Titanium.UI.createWindow({
@@ -57,33 +57,33 @@ function setNextPhoto() {
 	var photoInfo = flickrServer.getPhotoInfo();
 	
 	// 写真情報に設定された画像URLを、現在非表示のImageViewへ設定
-	imageViewList[hidingImageIndex].image = photoInfo.imageurl;
+	imageViewList[_hidingImageIndex].image = photoInfo.imageurl;
 }
 
 // 画像読み込み完了時イベントハンドラ
 function imageViewLoadHandler(e) {
 	// 表示非表示ImageViewのインデックス
-	var hidingIndex = hidingImageIndex;
-	var showingIndex = 1 - hidingImageIndex;	// 0と1を反転させる
+	var hidingIndex = _hidingImageIndex;
+	var showingIndex = 1 - _hidingImageIndex;	// 0と1を反転させる
 
 	// 初回起動時はどちらにも画像が表示されていないので、現在表示されている画像の
 	// フェードアウト処理は行わない
-	if (!isFirst) {
+	if (!_isFirst) {
 		// フェードアウトアニメーション生成
 		var fadeOut = Titanium.UI.createAnimation({
 			opacity: 0,
 			duration: CHANGE_DURATION
 		});
+		// アニメーション完了後イベントハンドラ追加
 		fadeOut.addEventListener('complete', function() {
-			// アニメーション完了後に、アニメーションにより変更した値を
-			// 本体へ設定する（やらないとAndroidで不具合発生）
+			// アニメーションで変更した値を本体へ設定（やらないとAndroidで不具合発生） 
 			imageViewList[showingIndex].opacity = 0;
 		});
 		
 		// 現在表示されている画像のフェードアウト
 		imageViewList[showingIndex].animate(fadeOut);
 	} else {
-		isFirst = false;
+		_isFirst = false;
 	}
 	
 	// フェードインアニメーション作成
@@ -91,13 +91,13 @@ function imageViewLoadHandler(e) {
 		opacity: 1,
 		duration: CHANGE_DURATION
 	});
+	// アニメーション完了後イベントハンドラ追加
 	fadeIn.addEventListener('complete', function() {
-		// アニメーション完了後に、アニメーションにより変更した値を
-		// 本体へ設定する（やらないとAndroidで不具合発生）
+		// アニメーションで変更した値を本体へ設定（やらないとAndroidで不具合発生）
 		imageViewList[hidingIndex].opacity = 1;
 		
 		// 表示/非表示ImageViewのインデックスを入れ替え
-		hidingImageIndex = showingIndex;
+		_hidingImageIndex = showingIndex;
 		
 		// また一定間隔後に写真を変更する
 		setTimeout(setNextPhoto, CHANGE_INTERVAL);
@@ -107,7 +107,7 @@ function imageViewLoadHandler(e) {
 	imageViewList[hidingIndex].animate(fadeIn);
 }
 
-// 画像読み込み完了時イベントハンドラ
+// 画像読み込みエラー時イベントハンドラ
 function imageViewErrorHandler(error) {
 	// 画像が読み込めなかったら即刻次の画像をトライ
 	Titanium.API.error(error);
