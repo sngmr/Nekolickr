@@ -2,7 +2,7 @@
 // 写真を切り替えるタイミング（ミリ秒）
 var CHANGE_INTERVAL = 30000;
 // 写真切り替えのフェードイン・アウト時間（ミリ秒）
-var CHANGE_DURATION = 2000;
+var CHANGE_DURATION = 5000;
 
 // Flickrからデータを取得するモジュール
 var flickrServer = require('flickr_server');
