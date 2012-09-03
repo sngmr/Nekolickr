@@ -1,5 +1,5 @@
 // Flickrから取得したAPI KEY
-var API_KEY = '0e50a1b12cca751d36539d5dfd71979e';
+var API_KEY = '@@@@@@@@@@@@@@@@@@@@@@@@@@';	// TODO 取得したAPI KEYに置き換えてください
 // グループID
 var GROUP_ID = '661812@N25';
 // グループから写真一覧を取得するAPIのURL（ベース）
